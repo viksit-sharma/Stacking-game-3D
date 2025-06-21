@@ -11,7 +11,7 @@
       height: 100%;
       overflow: hidden;
       font-family: 'Bangers', sans-serif;
-      background-color: #888888;border:3px solid #aa00ff85;
+      background-color: #888888;
     }
 #score {
   display: none;
@@ -95,4 +95,34 @@
     #instructions.hide {
       display: none;
     }
-    
+    @media (max-width: 567px) {
+  h1 {
+    font-size: 36px;
+    letter-spacing: 2px;
+    top: 10px;
+  }
+
+  #score {
+    font-size: 28px;
+    top: 10px;
+    left: 10px;
+    letter-spacing: 1px;
+  }
+
+  #instructions {
+    font-size: 32px;
+    padding: 10px 20px;
+    letter-spacing: 2px;
+    border-width: 3px;
+    box-shadow: 4px 4px 10px black;
+  }
+
+  #container, #game {
+    width: 100%;
+    height: 100%;
+  }
+
+  body {
+    border-width: 2px;
+  }
+}
