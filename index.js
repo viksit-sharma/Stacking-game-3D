@@ -29,10 +29,11 @@ window.addEventListener("resize", () => {
 function addLayer(x, z, width, depth, direction) {
   const y = boxHeight * stack.length;
   const layer = generateBox(x, y, z, width, depth);
-    layer.direction = direction;
-    layer.directionMultiplier = 1;
+  layer.direction = direction;
+  layer.directionMultiplier = 1;
   stack.push(layer);
 }
+
 
 function addOverhang(x, z, width, depth) {
   const y = boxHeight * (stack.length - 1);
@@ -43,7 +44,7 @@ function addOverhang(x, z, width, depth) {
   const delta = x - stack[stack.length - 2].position.x;
 
   const fallDistance = 40;
-  const fallSideDistance = 20 * Math.sign(delta || 1); // Default to 1 if delta is 0
+  const fallSideDistance = 20 * Math.sign(delta || 1); 
 
   const fallAxis = direction;
   const perpendicularAxis = fallAxis === "x" ? "z" : "x";
@@ -54,7 +55,7 @@ function addOverhang(x, z, width, depth) {
     duration: 1,
     ease: "power1.in",
     onComplete: () => {
-      scene.remove(overhang.threejs); // remove after animation
+      scene.remove(overhang.threejs);
     }
   });
 
@@ -105,22 +106,49 @@ function cutBox(topLayer, previousLayer, direction) {
     const overhangDepth = direction === "z" ? overhangSize : newDepth;
 
     addOverhang(overhangX, overhangZ, overhangWidth, overhangDepth);
+
+    
+    score++;
+    scoreElement.innerText = `Score : ${score}`;
+
+    return true;
   } else {
     missedTheSpot();
+    return false;
   }
 }
 
+
 function missedTheSpot() {
   const topLayer = stack[stack.length - 1];
-  addOverhang(topLayer.position.x, topLayer.position.z, topLayer.width, topLayer.depth);
-  scene.remove(topLayer.threejs);
-  stack.pop();
+
+  const mesh = topLayer.threejs;
+  const direction = topLayer.direction;
+  const delta = topLayer.position[direction] - stack[stack.length - 2].position[direction];
+  const sideOffset = 20 * Math.sign(delta || 1); 
+
+  gsap.to(mesh.position, {
+    y: mesh.position.y - 50,
+    [direction]: mesh.position[direction] + sideOffset,
+    duration: 1,
+    ease: "power1.in"
+  });
+
+  gsap.to(mesh.rotation, {
+    x: Math.random() * 2,
+    y: Math.random() * 2,
+    z: Math.random() * 2,
+    duration: 1
+  });
+
+  renderer.setAnimationLoop(null); 
 
   setTimeout(() => {
     alert("Game over!");
     window.location.reload();
-  }, 500);
+  }, 1000);
 }
+
 
 // function startGame() {
 //     gameStarted = true;
@@ -142,7 +170,7 @@ function missedTheSpot() {
 function startGame() {
   gameStarted = true;
   score = 0;
-  scoreElement.innerText = score;
+  scoreElement.innerText = `Score : ${score}`;
 
   instructionsElement.classList.add("hide");
   renderer.setAnimationLoop(animation);
@@ -150,11 +178,16 @@ function startGame() {
   const firstLayer = generateBox(0, 0, 0, boxSize, boxSize);
   stack.push(firstLayer);
 
-  const secondLayer = generateBox(-10, boxHeight, 0, boxSize, boxSize); // off-center
+  const secondLayer = generateBox(0, boxHeight, 0, boxSize, boxSize); // Directly above
   secondLayer.direction = "x";
   secondLayer.directionMultiplier = 1;
   stack.push(secondLayer);
+
+  document.getElementById("h1").style.display = "none";
+document.getElementById("score").style.display = "block";
+
 }
+
 
 
 
@@ -164,18 +197,17 @@ function placeLayer() {
   const previousLayer = stack[stack.length - 2];
   const direction = topLayer.direction;
 
-  cutBox(topLayer, previousLayer, direction);
+  const success = cutBox(topLayer, previousLayer, direction);
 
-  const nextX = direction === "x" ? topLayer.position.x : -3;
-  const nextZ = direction === "z" ? topLayer.position.z : -3;
+  if (!success) return;
+
+  const nextX = direction === "x" ? topLayer.position.x : previousLayer.position.x;
+  const nextZ = direction === "z" ? topLayer.position.z : previousLayer.position.z;
   const newDirection = direction === "x" ? "z" : "x";
 
-    addLayer(nextX, nextZ, topLayer.width, topLayer.depth, newDirection);
-    
-      score++;
-  scoreElement.innerText = score;
-
+  addLayer(nextX, nextZ, topLayer.width, topLayer.depth, newDirection);
 }
+
 
 // function animation() {
 //   const speed = 0.08;
@@ -197,12 +229,10 @@ function animation() {
   const axis = topLayer.direction;
   topLayer.threejs.position[axis] += speed * topLayer.directionMultiplier;
 
-  // Bounce back if out of bounds
   if (topLayer.threejs.position[axis] > 10 || topLayer.threejs.position[axis] < -10) {
     topLayer.directionMultiplier *= -1;
   }
 
-  // Move the camera up slowly
   if (camera.position.y < boxHeight * (stack.length - 2) + 4) {
     camera.position.y += speed;
   }
@@ -239,5 +269,7 @@ dirLight.position.set(10, 20, 0);
 scene.add(dirLight);
 
 camera.position.set(14, 12, 14);
-camera.lookAt(0, 0, 0);
+  camera.lookAt(0, 0, 0);
+  
+ 
 }
